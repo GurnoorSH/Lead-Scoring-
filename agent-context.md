@@ -57,8 +57,14 @@ Created Next.js dashboard in `dashboard`:
 - App Router setup.
 - `/` lead table with score badges and details drawer.
 - `/stats` Recharts bar chart and pie chart.
+- `/capture` internal dashboard lead form for Option A.
+- `/submit` public-style client lead form for Option B.
+- Shared `dashboard/app/components/LeadCaptureForm.jsx` posts form data directly to the n8n webhook.
+- Shared `dashboard/app/components/ThemeToggle.jsx` controls persisted light/dark mode across the dashboard and public submit page.
 - Uses `NEXT_PUBLIC_API_URL`, defaulting to `http://localhost:3001`.
+- Uses optional `NEXT_PUBLIC_N8N_WEBHOOK_URL` for Next.js forms.
 - Includes a persisted light/dark mode toggle in the top bar using `localStorage` key `leadCrmTheme`.
+- `dashboard/.env.local.example` includes `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_N8N_WEBHOOK_URL`.
 
 Created standalone demo form:
 
@@ -109,19 +115,25 @@ The Mongoose schema accepts these added fields:
 - Fixed a reported Next dev runtime error `__webpack_modules__[moduleId] is not a function` by stopping stale dev servers on ports `3000` and `3002`, deleting generated `dashboard/.next`, and restarting a clean dev server on `http://127.0.0.1:3000`.
 - Ran `npm --workspace leads-api run seed:mock` successfully. MongoDB now has 6 mock leads with `source: mock_seed`.
 - Added dashboard polish: clickable lead row hints, keyboard-openable lead rows, tooltip/title hints on metrics and charts, custom chart tooltip styling, and capitalized status/source labels in tables and charts.
+- Added both requested form architectures: Option A at `/capture` inside the dashboard, and Option B at `/submit` as a public-style client intake page. Both submit directly to the n8n webhook.
+- Added dark mode toggle to `/submit`; verified it switches between `dark` and `light`.
 
 ## Next Suggested Steps
 
 1. Start MongoDB with `docker compose up -d mongo`.
 2. Run `npm run dev:api`.
 3. Run `npm run dev:dashboard` if the dev server is not already running.
-4. Test `POST /leads` manually or through n8n.
-5. Open `demo-form/index.html` and submit to the n8n webhook.
-6. Confirm the dashboard lists the saved lead.
+4. Optional: seed demo leads with `npm --workspace leads-api run seed:mock`.
+5. Configure `dashboard/.env.local` with `NEXT_PUBLIC_N8N_WEBHOOK_URL` if the Next.js forms should hide the webhook URL field.
+6. Test the internal form at `http://localhost:3000/capture`.
+7. Test the public-style form at `http://localhost:3000/submit`.
+8. Confirm n8n saves scored leads through `POST /leads`, then verify them on `http://localhost:3000`.
+9. Use `demo-form/index.html` only as the standalone HTML fallback/demo form.
 
 ## Known Risks / Follow-Up
 
 - API cannot connect without a valid `MONGO_URI`.
+- `leads-api/.env.example` allows both `http://localhost:3000` and `http://127.0.0.1:3000` in `CORS_ORIGIN`.
 - n8n must send the full enriched payload to `POST /leads`.
 - If n8n runs in Docker, use `http://host.docker.internal:3001/leads` for the API URL.
 - `npm install` reported 2 moderate npm audit findings. No automatic force fix was applied because it may introduce breaking dependency changes.

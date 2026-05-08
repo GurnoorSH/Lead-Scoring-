@@ -21,7 +21,7 @@ The backend intentionally stays small. It does not run the AI scoring itself bec
 ## What Is Included
 
 - `leads-api`: Express + Mongoose API for saving and reading leads.
-- `dashboard`: Next.js App Router dashboard with lead table, lead drawer, and charts.
+- `dashboard`: Next.js App Router dashboard with lead table, lead drawer, charts, and lead capture pages.
 - `demo-form`: standalone HTML lead form that posts to your n8n webhook.
 - `README.md`: setup and project explanation.
 - `agent-context.md`: handoff notes for future agents.
@@ -30,7 +30,7 @@ The backend intentionally stays small. It does not run the AI scoring itself bec
 
 - Node.js 20 or newer
 - npm
-- MongoDB running locally or a MongoDB Atlas connection string
+- Docker Desktop for local MongoDB
 - n8n workflow from Phase 1
 - OpenAI credentials configured in n8n
 
@@ -53,7 +53,7 @@ Edit `leads-api/.env`:
 ```env
 PORT=3001
 MONGO_URI=mongodb://127.0.0.1:27017/lead-scoring-crm
-CORS_ORIGIN=http://localhost:3000
+CORS_ORIGIN=http://localhost:3000,http://127.0.0.1:3000
 ```
 
 ## MongoDB With Docker
@@ -96,6 +96,13 @@ Optional dashboard environment file:
 cp dashboard/.env.local.example dashboard/.env.local
 ```
 
+For the Next.js lead capture forms, set:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_N8N_WEBHOOK_URL=http://localhost:5678/webhook-test/lead
+```
+
 ## Run Locally
 
 Start MongoDB first.
@@ -125,7 +132,21 @@ Open:
 - API health check: `http://localhost:3001/health`
 - Dashboard: `http://localhost:3000`
 - Stats: `http://localhost:3000/stats`
-- Demo form: open `demo-form/index.html` in a browser
+- Internal capture form: `http://localhost:3000/capture`
+- Public-style lead form: `http://localhost:3000/submit`
+- Standalone HTML form: open `demo-form/index.html` in a browser
+
+## Scripts
+
+From the project root:
+
+```bash
+npm run dev:api          # Start Express API on port 3001
+npm run dev:dashboard    # Start Next.js dashboard on port 3000
+npm run build            # Build the Next.js dashboard
+npm run typecheck        # Runs the dashboard build check
+npm --workspace leads-api run seed:mock
+```
 
 ## API Endpoints
 
@@ -222,7 +243,47 @@ In the HTTP Request node that saves to the API:
 - Body: JSON
 - Send the full current JSON payload
 
-## Demo Form
+## Lead Capture Forms
+
+There are now two Next.js lead-entry options, plus the original standalone HTML form.
+
+### Option A: Dashboard Capture Form
+
+Open:
+
+```text
+http://localhost:3000/capture
+```
+
+This is the internal/admin version. It lives inside the dashboard and is best for portfolio demos, internal tools, and manually entering a lead from a sales call.
+
+Flow:
+
+```text
+User -> Next.js dashboard form -> n8n webhook -> AI scoring -> Node API -> MongoDB
+```
+
+### Option B: Public Client Form
+
+Open:
+
+```text
+http://localhost:3000/submit
+```
+
+This is the public-style intake page. It simulates a real client website form that sends submissions into the same n8n automation.
+
+If `NEXT_PUBLIC_N8N_WEBHOOK_URL` is configured, the public form uses it automatically. If it is not configured, the page shows a webhook URL field so local demos still work.
+
+The public page also has its own light/dark mode toggle. It shares the same persisted theme setting as the dashboard.
+
+Flow:
+
+```text
+Website visitor -> Public lead form -> n8n webhook -> AI scoring -> Node API -> MongoDB
+```
+
+### Standalone HTML Form
 
 Open `demo-form/index.html` in your browser.
 
@@ -260,7 +321,11 @@ Main screens:
 
 - `/`: lead table with score badges and a details drawer
 - `/stats`: source bar chart and hot/warm/cold pie chart
+- `/capture`: internal dashboard lead form
+- `/submit`: public-style client intake form
 - Light/dark mode toggle in the top bar
+- Lead rows are clickable and keyboard-openable for details
+- Metrics, rows, and charts include hover hints/tooltips
 
 Score colors:
 
@@ -269,6 +334,8 @@ Score colors:
 - Cold: `<40`
 
 ## Build
+
+Stop `npm run dev:dashboard` before running a production build. Next.js dev and build both write to `dashboard/.next`.
 
 ```bash
 npm run build
@@ -290,14 +357,15 @@ Avoid running `npm run build` while the dev server is open.
 
 ## Suggested Demo Flow
 
-1. Start MongoDB.
+1. Start MongoDB with `docker compose up -d mongo`.
 2. Start the API with `npm run dev:api`.
-3. Start n8n and activate/test the Phase 1 workflow.
-4. Open `demo-form/index.html`.
-5. Submit a marketing agency lead with urgent timeline and strong budget.
-6. Confirm n8n scores it, saves it to MongoDB, and sends hot-lead alerts.
-7. Open the dashboard at `http://localhost:3000`.
-8. Show the lead table, drawer summary, and stats charts.
+3. Start the dashboard with `npm run dev:dashboard`.
+4. Optional: seed demo data with `npm --workspace leads-api run seed:mock`.
+5. Start n8n and activate/test the Phase 1 workflow.
+6. Open `http://localhost:3000/capture` and submit an internal test lead.
+7. Open `http://localhost:3000/submit` and submit a public-style lead.
+8. Confirm n8n scores each lead, saves it to MongoDB, and sends hot-lead alerts.
+9. Open `http://localhost:3000` and show the lead table, drawer summary, stats charts, and dark mode.
 
 ## What This Project Does Not Include
 
