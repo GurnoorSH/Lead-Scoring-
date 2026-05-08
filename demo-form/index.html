@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lead Capture Form</title>
+    <style>
+      :root {
+        --bg: #f6f7f9;
+        --panel: #ffffff;
+        --line: #d8dee8;
+        --text: #17202f;
+        --muted: #667085;
+        --focus: #1d63b7;
+        --success: #147a4b;
+        --error: #b42318;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      main {
+        width: min(920px, calc(100vw - 28px));
+        margin: 0 auto;
+        padding: 34px 0;
+      }
+
+      header {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 18px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 30px;
+        letter-spacing: 0;
+      }
+
+      header p {
+        margin: 6px 0 0;
+        color: var(--muted);
+      }
+
+      .status {
+        min-width: 220px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        border-radius: 8px;
+        color: var(--muted);
+      }
+
+      .status.success {
+        color: var(--success);
+        border-color: #b9e2cc;
+        background: #edf8f2;
+      }
+
+      .status.error {
+        color: var(--error);
+        border-color: #f3b8b3;
+        background: #fff0ee;
+      }
+
+      form {
+        display: grid;
+        gap: 16px;
+        padding: 22px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      .segmented {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        padding: 5px;
+        background: #eef1f5;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      .segmented label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        border-radius: 6px;
+        color: var(--muted);
+        cursor: pointer;
+      }
+
+      .segmented input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .segmented label:has(input:checked) {
+        color: var(--text);
+        background: var(--panel);
+        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .field {
+        display: grid;
+        gap: 7px;
+      }
+
+      .field.full {
+        grid-column: 1 / -1;
+      }
+
+      label,
+      legend {
+        color: #344054;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      input,
+      select,
+      textarea,
+      button {
+        font: inherit;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        min-height: 42px;
+        padding: 10px 11px;
+        color: var(--text);
+        background: #ffffff;
+        border: 1px solid #cfd6e2;
+        border-radius: 8px;
+        outline: none;
+      }
+
+      textarea {
+        min-height: 118px;
+        resize: vertical;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: var(--focus);
+        box-shadow: 0 0 0 3px rgba(29, 99, 183, 0.13);
+      }
+
+      fieldset {
+        display: grid;
+        gap: 14px;
+        margin: 0;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      button {
+        min-height: 44px;
+        padding: 0 16px;
+        color: #ffffff;
+        background: #111827;
+        border: 0;
+        border-radius: 8px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        cursor: wait;
+        opacity: 0.68;
+      }
+
+      @media (max-width: 720px) {
+        header,
+        .actions {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .status,
+        button {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>Lead Capture</h1>
+          <p>Marketing agency and real estate lead source simulator.</p>
+        </div>
+        <div id="status" class="status" role="status">Ready</div>
+      </header>
+
+      <form id="leadForm">
+        <div class="field">
+          <label for="webhookUrl">n8n webhook URL</label>
+          <input id="webhookUrl" name="webhookUrl" type="url" placeholder="http://localhost:5678/webhook-test/lead" required>
+        </div>
+
+        <div class="segmented" aria-label="Lead type">
+          <label>
+            <input type="radio" name="leadCategory" value="marketing_agency" checked>
+            Marketing Agency
+          </label>
+          <label>
+            <input type="radio" name="leadCategory" value="real_estate_agent">
+            Real Estate Agent
+          </label>
+        </div>
+
+        <section class="grid" aria-label="Contact details">
+          <div class="field">
+            <label for="name">Name</label>
+            <input id="name" name="name" type="text" autocomplete="name" required>
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" autocomplete="email" required>
+          </div>
+          <div class="field">
+            <label for="phone">Phone</label>
+            <input id="phone" name="phone" type="tel" autocomplete="tel" required>
+          </div>
+          <div class="field">
+            <label for="location">Location</label>
+            <input id="location" name="location" type="text" autocomplete="address-level2" required>
+          </div>
+          <div class="field">
+            <label for="source">Source</label>
+            <select id="source" name="source">
+              <option value="website">Website</option>
+              <option value="facebook_ad">Facebook ad</option>
+              <option value="google_ad">Google ad</option>
+              <option value="referral">Referral</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="company">Company</label>
+            <input id="company" name="company" type="text" autocomplete="organization">
+          </div>
+        </section>
+
+        <fieldset id="marketingFields">
+          <legend>Marketing Agency</legend>
+          <section class="grid">
+            <div class="field">
+              <label for="serviceNeeded">Service needed</label>
+              <select id="serviceNeeded" name="serviceNeeded">
+                <option>Website</option>
+                <option>SEO</option>
+                <option>Paid Ads</option>
+                <option>Social Media</option>
+                <option>Automation</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="monthlyBudget">Monthly budget</label>
+              <select id="monthlyBudget" name="monthlyBudget">
+                <option>Under $500</option>
+                <option>$500-$1500</option>
+                <option>$1500-$5000</option>
+                <option>$5000+</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="marketingTimeline">Timeline</label>
+              <select id="marketingTimeline" name="marketingTimeline">
+                <option>ASAP</option>
+                <option>Within a month</option>
+                <option>1-3 months</option>
+                <option>Exploring</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="businessType">Business type</label>
+              <select id="businessType" name="businessType">
+                <option>Local business</option>
+                <option>Ecommerce</option>
+                <option>SaaS</option>
+                <option>Agency</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label for="currentProblem">Current problem</label>
+              <textarea id="currentProblem" name="currentProblem"></textarea>
+            </div>
+          </section>
+        </fieldset>
+
+        <fieldset id="realEstateFields" class="hidden">
+          <legend>Real Estate Agent</legend>
+          <section class="grid">
+            <div class="field">
+              <label for="lookingTo">Looking to</label>
+              <select id="lookingTo" name="lookingTo">
+                <option>Buy</option>
+                <option>Sell</option>
+                <option>Both</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="propertyType">Property type</label>
+              <select id="propertyType" name="propertyType">
+                <option>Apartment</option>
+                <option>Villa</option>
+                <option>Commercial</option>
+                <option>Land</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="budgetRange">Budget range</label>
+              <select id="budgetRange" name="budgetRange">
+                <option>&lt;$100k</option>
+                <option>$100k-$300k</option>
+                <option>$300k-$700k</option>
+                <option>$700k+</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="realEstateTimeline">Timeline</label>
+              <select id="realEstateTimeline" name="realEstateTimeline">
+                <option>Immediately</option>
+                <option>1-3 months</option>
+                <option>3-6 months</option>
+                <option>Just browsing</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label for="locationPreference">Location preference</label>
+              <input id="locationPreference" name="locationPreference" type="text">
+            </div>
+          </section>
+        </fieldset>
+
+        <div class="actions">
+          <button id="submitButton" type="submit">Submit lead</button>
+        </div>
+      </form>
+    </main>
+
+    <script>
+      const form = document.querySelector('#leadForm');
+      const statusBox = document.querySelector('#status');
+      const submitButton = document.querySelector('#submitButton');
+      const webhookInput = document.querySelector('#webhookUrl');
+      const marketingFields = document.querySelector('#marketingFields');
+      const realEstateFields = document.querySelector('#realEstateFields');
+
+      webhookInput.value = localStorage.getItem('leadWebhookUrl') || '';
+
+      function setStatus(message, type = '') {
+        statusBox.textContent = message;
+        statusBox.className = `status ${type}`.trim();
+      }
+
+      function getCategory() {
+        return new FormData(form).get('leadCategory');
+      }
+
+      function updateFields() {
+        const isMarketing = getCategory() === 'marketing_agency';
+        marketingFields.classList.toggle('hidden', !isMarketing);
+        realEstateFields.classList.toggle('hidden', isMarketing);
+      }
+
+      form.addEventListener('change', updateFields);
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        submitButton.disabled = true;
+        setStatus('Sending...');
+
+        const data = new FormData(form);
+        const webhookUrl = data.get('webhookUrl');
+        const leadCategory = data.get('leadCategory');
+
+        localStorage.setItem('leadWebhookUrl', webhookUrl);
+
+        const payload = {
+          name: data.get('name'),
+          email: data.get('email'),
+          phone: data.get('phone'),
+          location: data.get('location'),
+          company: data.get('company'),
+          source: data.get('source'),
+          leadCategory
+        };
+
+        if (leadCategory === 'marketing_agency') {
+          payload.serviceNeeded = data.get('serviceNeeded');
+          payload.monthlyBudget = data.get('monthlyBudget');
+          payload.timeline = data.get('marketingTimeline');
+          payload.businessType = data.get('businessType');
+          payload.currentProblem = data.get('currentProblem');
+          payload.notes = [
+            `Service needed: ${payload.serviceNeeded}`,
+            `Monthly budget: ${payload.monthlyBudget}`,
+            `Timeline: ${payload.timeline}`,
+            `Business type: ${payload.businessType}`,
+            `Current problem: ${payload.currentProblem}`
+          ].join('\n');
+        } else {
+          payload.lookingTo = data.get('lookingTo');
+          payload.propertyType = data.get('propertyType');
+          payload.budgetRange = data.get('budgetRange');
+          payload.timeline = data.get('realEstateTimeline');
+          payload.locationPreference = data.get('locationPreference');
+          payload.notes = [
+            `Looking to: ${payload.lookingTo}`,
+            `Property type: ${payload.propertyType}`,
+            `Budget range: ${payload.budgetRange}`,
+            `Timeline: ${payload.timeline}`,
+            `Location preference: ${payload.locationPreference}`
+          ].join('\n');
+        }
+
+        try {
+          const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            throw new Error(`Webhook returned ${response.status}`);
+          }
+
+          form.reset();
+          webhookInput.value = webhookUrl;
+          document.querySelector('input[value="marketing_agency"]').checked = leadCategory === 'marketing_agency';
+          document.querySelector('input[value="real_estate_agent"]').checked = leadCategory === 'real_estate_agent';
+          updateFields();
+          setStatus('Lead submitted', 'success');
+        } catch (error) {
+          setStatus(error.message, 'error');
+        } finally {
+          submitButton.disabled = false;
+        }
+      });
+
+      updateFields();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "lead-scoring-crm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-assisted lead scoring CRM demo using n8n, OpenAI, MongoDB, Express, and Next.js.",
+  "workspaces": [
+    "leads-api",
+    "dashboard"
+  ],
+  "scripts": {
+    "dev:api": "npm --workspace leads-api run dev",
+    "dev:dashboard": "npm --workspace dashboard run dev",
+    "build": "npm --workspace dashboard run build",
+    "typecheck": "npm --workspace dashboard run typecheck"
+  }
+}
