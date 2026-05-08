@@ -4,11 +4,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { RefreshCw, X } from 'lucide-react';
 
 import AppShell from './components/AppShell';
-import { fetchJson, formatDate, getStatus } from './lib/api';
+import { fetchJson, formatDate, formatLabel, getStatus } from './lib/api';
 
 function ScoreBadge({ score }) {
   const status = getStatus(score);
-  return <span className={`badge ${status}`}>{score ?? 0}/100</span>;
+  return (
+    <span className={`badge ${status}`} title={`${formatLabel(status)} lead score`}>
+      {score ?? 0}/100
+    </span>
+  );
 }
 
 function LeadDrawer({ lead, onClose }) {
@@ -34,7 +38,7 @@ function LeadDrawer({ lead, onClose }) {
           <div className="detail-grid">
             <div className="detail">
               <span>Status</span>
-              <strong className={`status-dot ${status}`}>{status}</strong>
+              <strong className={`status-dot ${status}`}>{formatLabel(status)}</strong>
             </div>
             <div className="detail">
               <span>Score</span>
@@ -42,11 +46,11 @@ function LeadDrawer({ lead, onClose }) {
             </div>
             <div className="detail">
               <span>Intent</span>
-              <strong>{lead.intent || 'Not scored'}</strong>
+              <strong>{formatLabel(lead.intent || 'Not scored')}</strong>
             </div>
             <div className="detail">
               <span>Type</span>
-              <strong>{lead.type || lead.leadCategory || 'Unknown'}</strong>
+              <strong>{formatLabel(lead.type || lead.leadCategory || 'Unknown')}</strong>
             </div>
           </div>
         </section>
@@ -74,7 +78,7 @@ function LeadDrawer({ lead, onClose }) {
             </div>
             <div className="detail">
               <span>Source</span>
-              <strong>{lead.source || 'website'}</strong>
+              <strong>{formatLabel(lead.source || 'website')}</strong>
             </div>
           </div>
         </section>
@@ -149,7 +153,7 @@ export default function LeadsPage() {
           <p>Newest enriched leads from the n8n workflow.</p>
         </div>
         <div className="actions">
-          <button className="text-button" onClick={loadLeads} disabled={loading}>
+          <button className="text-button" onClick={loadLeads} disabled={loading} title="Fetch the latest leads from the API">
             <RefreshCw size={17} />
             Refresh
           </button>
@@ -157,19 +161,19 @@ export default function LeadsPage() {
       </div>
 
       <section className="summary-grid" aria-label="Lead summary">
-        <div className="metric">
+        <div className="metric" title="Every lead currently saved in MongoDB">
           <span>Total leads</span>
           <strong>{metrics.total}</strong>
         </div>
-        <div className="metric">
+        <div className="metric" title="Leads with scores of 70 or higher">
           <span>Hot leads</span>
           <strong>{metrics.hot}</strong>
         </div>
-        <div className="metric">
+        <div className="metric" title="Average AI score across all loaded leads">
           <span>Average score</span>
           <strong>{metrics.avgScore}</strong>
         </div>
-        <div className="metric">
+        <div className="metric" title="Hot leads with an email address available">
           <span>Call priority</span>
           <strong>{metrics.emailReady}</strong>
         </div>
@@ -196,7 +200,19 @@ export default function LeadsPage() {
               {leads.map((lead) => {
                 const status = lead.status || getStatus(lead.score);
                 return (
-                  <tr key={lead._id} onClick={() => setSelectedLead(lead)}>
+                  <tr
+                    key={lead._id}
+                    className="clickable-row"
+                    onClick={() => setSelectedLead(lead)}
+                    title="Click for lead details"
+                    tabIndex={0}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setSelectedLead(lead);
+                      }
+                    }}
+                  >
                     <td>
                       <div className="lead-name">
                         <strong>{lead.name || 'Unnamed lead'}</strong>
@@ -209,9 +225,9 @@ export default function LeadsPage() {
                         <span>{lead.location || lead.locationPreference || lead.timeline || ''}</span>
                       </div>
                     </td>
-                    <td>{lead.source || 'website'}</td>
+                    <td>{formatLabel(lead.source || 'website')}</td>
                     <td><ScoreBadge score={lead.score} /></td>
-                    <td><span className={`status-dot ${status}`}>{status}</span></td>
+                    <td><span className={`status-dot ${status}`}>{formatLabel(status)}</span></td>
                     <td>{formatDate(lead.createdAt)}</td>
                   </tr>
                 );

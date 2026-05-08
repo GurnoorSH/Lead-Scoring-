@@ -26,3 +26,13 @@ export function getStatus(score = 0) {
   if (score >= 40) return 'warm';
   return 'cold';
 }
+
+export function formatLabel(value) {
+  if (!value) return 'Unknown';
+
+  return String(value)
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}

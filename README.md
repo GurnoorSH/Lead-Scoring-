@@ -56,6 +56,40 @@ MONGO_URI=mongodb://127.0.0.1:27017/lead-scoring-crm
 CORS_ORIGIN=http://localhost:3000
 ```
 
+## MongoDB With Docker
+
+This project includes `docker-compose.yml` for local MongoDB.
+
+Start MongoDB:
+
+```bash
+docker compose up -d mongo
+```
+
+Check that it is running:
+
+```bash
+docker ps
+```
+
+The API should use:
+
+```env
+MONGO_URI=mongodb://127.0.0.1:27017/lead-scoring-crm
+```
+
+Stop MongoDB:
+
+```bash
+docker compose down
+```
+
+Stop MongoDB and delete the local database volume:
+
+```bash
+docker compose down -v
+```
+
 Optional dashboard environment file:
 
 ```bash
@@ -71,6 +105,14 @@ Start the API:
 ```bash
 npm run dev:api
 ```
+
+Add demo leads to MongoDB:
+
+```bash
+npm --workspace leads-api run seed:mock
+```
+
+The seed command replaces only leads with `source: "mock_seed"` and leaves real n8n leads untouched.
 
 Start the dashboard in another terminal:
 
@@ -218,6 +260,7 @@ Main screens:
 
 - `/`: lead table with score badges and a details drawer
 - `/stats`: source bar chart and hot/warm/cold pie chart
+- Light/dark mode toggle in the top bar
 
 Score colors:
 
@@ -230,6 +273,20 @@ Score colors:
 ```bash
 npm run build
 ```
+
+## Troubleshooting
+
+### `__webpack_modules__[moduleId] is not a function`
+
+This can happen if `next build` runs while `next dev` is still running, because both commands write to `dashboard/.next`.
+
+Fix:
+
+1. Stop the dashboard dev server.
+2. Delete `dashboard/.next`.
+3. Start the dashboard again with `npm run dev:dashboard`.
+
+Avoid running `npm run build` while the dev server is open.
 
 ## Suggested Demo Flow
 

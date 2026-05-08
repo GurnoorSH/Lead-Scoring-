@@ -5,6 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
+    "seed:mock": "node src/seedMockLeads.js",
     "start": "node src/index.js"
   },
   "dependencies": {

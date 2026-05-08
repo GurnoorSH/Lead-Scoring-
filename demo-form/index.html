@@ -6,14 +6,43 @@
     <title>Lead Capture Form</title>
     <style>
       :root {
+        color-scheme: light;
         --bg: #f6f7f9;
         --panel: #ffffff;
+        --panel-soft: #eef1f5;
         --line: #d8dee8;
         --text: #17202f;
         --muted: #667085;
+        --input-bg: #ffffff;
+        --button-bg: #111827;
+        --button-text: #ffffff;
         --focus: #1d63b7;
         --success: #147a4b;
+        --success-bg: #edf8f2;
+        --success-line: #b9e2cc;
         --error: #b42318;
+        --error-bg: #fff0ee;
+        --error-line: #f3b8b3;
+      }
+
+      [data-theme='dark'] {
+        color-scheme: dark;
+        --bg: #10151d;
+        --panel: #171e29;
+        --panel-soft: #202938;
+        --line: #303b4d;
+        --text: #e8edf5;
+        --muted: #a6b0c0;
+        --input-bg: #111827;
+        --button-bg: #f4f7fb;
+        --button-text: #111827;
+        --focus: #79aef2;
+        --success: #6fd5a0;
+        --success-bg: #153927;
+        --success-line: #236341;
+        --error: #ff9a93;
+        --error-bg: #45211f;
+        --error-line: #7c332e;
       }
 
       * {
@@ -36,7 +65,7 @@
 
       header {
         display: flex;
-        align-items: end;
+        align-items: flex-end;
         justify-content: space-between;
         gap: 18px;
         margin-bottom: 18px;
@@ -64,14 +93,14 @@
 
       .status.success {
         color: var(--success);
-        border-color: #b9e2cc;
-        background: #edf8f2;
+        border-color: var(--success-line);
+        background: var(--success-bg);
       }
 
       .status.error {
         color: var(--error);
-        border-color: #f3b8b3;
-        background: #fff0ee;
+        border-color: var(--error-line);
+        background: var(--error-bg);
       }
 
       form {
@@ -88,7 +117,7 @@
         grid-template-columns: 1fr 1fr;
         gap: 6px;
         padding: 5px;
-        background: #eef1f5;
+        background: var(--panel-soft);
         border: 1px solid var(--line);
         border-radius: 8px;
       }
@@ -132,7 +161,7 @@
 
       label,
       legend {
-        color: #344054;
+        color: var(--text);
         font-size: 13px;
         font-weight: 700;
       }
@@ -151,8 +180,8 @@
         min-height: 42px;
         padding: 10px 11px;
         color: var(--text);
-        background: #ffffff;
-        border: 1px solid #cfd6e2;
+        background: var(--input-bg);
+        border: 1px solid var(--line);
         border-radius: 8px;
         outline: none;
       }
@@ -191,12 +220,20 @@
       button {
         min-height: 44px;
         padding: 0 16px;
-        color: #ffffff;
-        background: #111827;
+        color: var(--button-text);
+        background: var(--button-bg);
         border: 0;
         border-radius: 8px;
         font-weight: 700;
         cursor: pointer;
+      }
+
+      .theme-toggle {
+        min-width: 44px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--text);
       }
 
       button:disabled {
@@ -229,7 +266,10 @@
           <h1>Lead Capture</h1>
           <p>Marketing agency and real estate lead source simulator.</p>
         </div>
-        <div id="status" class="status" role="status">Ready</div>
+        <div class="actions">
+          <button id="themeToggle" class="theme-toggle" type="button" aria-label="Use dark mode" title="Use dark mode">Dark</button>
+          <div id="status" class="status" role="status">Ready</div>
+        </div>
       </header>
 
       <form id="leadForm">
@@ -388,8 +428,26 @@
       const webhookInput = document.querySelector('#webhookUrl');
       const marketingFields = document.querySelector('#marketingFields');
       const realEstateFields = document.querySelector('#realEstateFields');
+      const themeToggle = document.querySelector('#themeToggle');
 
       webhookInput.value = localStorage.getItem('leadWebhookUrl') || '';
+
+      function applyTheme(theme) {
+        document.documentElement.dataset.theme = theme;
+        themeToggle.textContent = theme === 'dark' ? 'Light' : 'Dark';
+        themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Use light mode' : 'Use dark mode');
+        themeToggle.setAttribute('title', theme === 'dark' ? 'Use light mode' : 'Use dark mode');
+      }
+
+      const savedTheme = localStorage.getItem('leadFormTheme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      applyTheme(savedTheme || (prefersDark ? 'dark' : 'light'));
+
+      themeToggle.addEventListener('click', () => {
+        const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('leadFormTheme', nextTheme);
+        applyTheme(nextTheme);
+      });
 
       function setStatus(message, type = '') {
         statusBox.textContent = message;
