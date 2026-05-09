@@ -7,7 +7,7 @@ export const metadata = {
 };
 
 export default function SubmitPage() {
-  const hasConfiguredWebhook = Boolean(process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL);
+  const hasConfiguredWebhook = Boolean(process.env.N8N_WEBHOOK_URL || process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL);
 
   return (
     <main className="public-submit-shell">

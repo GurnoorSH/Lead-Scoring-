@@ -101,7 +101,10 @@ For the Next.js lead capture forms, set:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3001
 NEXT_PUBLIC_N8N_WEBHOOK_URL=http://localhost:5678/webhook-test/lead
+N8N_WEBHOOK_URL=http://localhost:5678/webhook-test/lead
 ```
+
+`N8N_WEBHOOK_URL` is used by the Next.js server-side proxy route. This avoids browser CORS errors when n8n does not return `Access-Control-Allow-Origin`.
 
 ## Run Locally
 
@@ -260,7 +263,7 @@ This is the internal/admin version. It lives inside the dashboard and is best fo
 Flow:
 
 ```text
-User -> Next.js dashboard form -> n8n webhook -> AI scoring -> Node API -> MongoDB
+User -> Next.js dashboard form -> Next.js API proxy -> n8n webhook -> AI scoring -> Node API -> MongoDB
 ```
 
 ### Option B: Public Client Form
@@ -280,8 +283,16 @@ The public page also has its own light/dark mode toggle. It shares the same pers
 Flow:
 
 ```text
-Website visitor -> Public lead form -> n8n webhook -> AI scoring -> Node API -> MongoDB
+Website visitor -> Public lead form -> Next.js API proxy -> n8n webhook -> AI scoring -> Node API -> MongoDB
 ```
+
+The proxy route is:
+
+```text
+POST http://localhost:3000/api/lead-webhook
+```
+
+The browser calls this same-origin Next.js route. The Next.js server then forwards the lead to n8n, so the browser never makes a cross-origin request to `localhost:5678`.
 
 ### Standalone HTML Form
 
@@ -342,6 +353,26 @@ npm run build
 ```
 
 ## Troubleshooting
+
+### Browser CORS Error When Submitting to n8n
+
+If the browser says the n8n webhook was blocked by CORS, do not call the n8n webhook directly from the browser. Use the built-in Next.js proxy route:
+
+```text
+POST /api/lead-webhook
+```
+
+The `/capture` and `/submit` pages already use this route.
+
+Set the server-side webhook URL in `dashboard/.env.local`:
+
+```env
+N8N_WEBHOOK_URL=http://localhost:5678/webhook-test/lead
+```
+
+If n8n is running in Docker but exposes port `5678` to your host machine, `http://localhost:5678/...` is correct from the Next.js dev server running on your host.
+
+If you use an n8n test webhook such as `/webhook-test/lead`, click **Execute workflow** in n8n before submitting the form. Test webhooks are temporary and n8n may return `404 The requested webhook "lead" is not registered` until the workflow is listening. For an active workflow, use the production webhook path, usually `/webhook/lead`.
 
 ### `__webpack_modules__[moduleId] is not a function`
 

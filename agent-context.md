@@ -59,10 +59,11 @@ Created Next.js dashboard in `dashboard`:
 - `/stats` Recharts bar chart and pie chart.
 - `/capture` internal dashboard lead form for Option A.
 - `/submit` public-style client lead form for Option B.
-- Shared `dashboard/app/components/LeadCaptureForm.jsx` posts form data directly to the n8n webhook.
+- Shared `dashboard/app/components/LeadCaptureForm.jsx` posts form data to the Next.js proxy route.
+- `dashboard/app/api/lead-webhook/route.js` is a server-side proxy that forwards form submissions to n8n and avoids browser CORS errors.
 - Shared `dashboard/app/components/ThemeToggle.jsx` controls persisted light/dark mode across the dashboard and public submit page.
 - Uses `NEXT_PUBLIC_API_URL`, defaulting to `http://localhost:3001`.
-- Uses optional `NEXT_PUBLIC_N8N_WEBHOOK_URL` for Next.js forms.
+- Uses optional `N8N_WEBHOOK_URL` / `NEXT_PUBLIC_N8N_WEBHOOK_URL` for Next.js forms.
 - Includes a persisted light/dark mode toggle in the top bar using `localStorage` key `leadCrmTheme`.
 - `dashboard/.env.local.example` includes `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_N8N_WEBHOOK_URL`.
 
@@ -117,6 +118,9 @@ The Mongoose schema accepts these added fields:
 - Added dashboard polish: clickable lead row hints, keyboard-openable lead rows, tooltip/title hints on metrics and charts, custom chart tooltip styling, and capitalized status/source labels in tables and charts.
 - Added both requested form architectures: Option A at `/capture` inside the dashboard, and Option B at `/submit` as a public-style client intake page. Both submit directly to the n8n webhook.
 - Added dark mode toggle to `/submit`; verified it switches between `dark` and `light`.
+- Fixed n8n browser CORS issue by changing Next.js forms to call same-origin `POST /api/lead-webhook`; the server route forwards to n8n.
+- Created local ignored `dashboard/.env.local` with `N8N_WEBHOOK_URL=http://localhost:5678/webhook-test/lead`.
+- Verified the proxy reaches n8n. Current n8n response was `404 The requested webhook "lead" is not registered`, which means the n8n test workflow must be put into Execute Workflow/listening mode or switched to production `/webhook/lead`.
 
 ## Next Suggested Steps
 
@@ -124,7 +128,7 @@ The Mongoose schema accepts these added fields:
 2. Run `npm run dev:api`.
 3. Run `npm run dev:dashboard` if the dev server is not already running.
 4. Optional: seed demo leads with `npm --workspace leads-api run seed:mock`.
-5. Configure `dashboard/.env.local` with `NEXT_PUBLIC_N8N_WEBHOOK_URL` if the Next.js forms should hide the webhook URL field.
+5. Configure `dashboard/.env.local` with `N8N_WEBHOOK_URL` or `NEXT_PUBLIC_N8N_WEBHOOK_URL` if the Next.js forms should hide the webhook URL field.
 6. Test the internal form at `http://localhost:3000/capture`.
 7. Test the public-style form at `http://localhost:3000/submit`.
 8. Confirm n8n saves scored leads through `POST /leads`, then verify them on `http://localhost:3000`.
@@ -136,5 +140,6 @@ The Mongoose schema accepts these added fields:
 - `leads-api/.env.example` allows both `http://localhost:3000` and `http://127.0.0.1:3000` in `CORS_ORIGIN`.
 - n8n must send the full enriched payload to `POST /leads`.
 - If n8n runs in Docker, use `http://host.docker.internal:3001/leads` for the API URL.
+- If the browser shows an n8n CORS error, ensure the forms are calling `/api/lead-webhook`, not `http://localhost:5678/...` directly.
 - `npm install` reported 2 moderate npm audit findings. No automatic force fix was applied because it may introduce breaking dependency changes.
 - Do not run `npm run build` while `npm run dev:dashboard` is running; both write to `dashboard/.next` and can corrupt the dev server module graph.

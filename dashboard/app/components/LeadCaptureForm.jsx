@@ -80,7 +80,7 @@ export default function LeadCaptureForm({
     const data = new FormData(event.currentTarget);
     const targetWebhookUrl = showWebhookField ? data.get('webhookUrl') : webhookUrl;
 
-    if (!targetWebhookUrl) {
+    if (showWebhookField && !targetWebhookUrl) {
       setStatus({ type: 'error', message: 'Add your n8n webhook URL first.' });
       return;
     }
@@ -89,19 +89,25 @@ export default function LeadCaptureForm({
     setStatus({ type: '', message: 'Sending to n8n...' });
 
     try {
-      const response = await fetch(targetWebhookUrl, {
+      const response = await fetch('/api/lead-webhook', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(buildPayload(data, sourceDefault))
+        body: JSON.stringify({
+          webhookUrl: targetWebhookUrl || undefined,
+          lead: buildPayload(data, sourceDefault)
+        })
       });
 
       if (!response.ok) {
-        throw new Error(`n8n returned ${response.status}`);
+        const errorBody = await response.json().catch(() => null);
+        throw new Error(errorBody?.error || `n8n proxy returned ${response.status}`);
       }
 
-      window.localStorage.setItem('leadWebhookUrl', targetWebhookUrl);
+      if (targetWebhookUrl) {
+        window.localStorage.setItem('leadWebhookUrl', targetWebhookUrl);
+      }
       setWebhookUrl(targetWebhookUrl);
       event.currentTarget.reset();
       setLeadCategory('marketing_agency');
